@@ -1,61 +1,46 @@
-from fastapi import FastAPI, Request, Response, status, Depends
 from fastapi.responses import JSONResponse
-from src.security.hash import generate
-from src.schemas.models import *
-from src.security.security import securityKEY
 from src.instance.server import server
-from datetime import datetime
+from fastapi import Request, Response
+from src.schemas.models import Password
 from dotenv import load_dotenv
+from datetime import datetime
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-import requests
-import uvicorn
-import time
-import os
-
 import random
 import string
+import os
 
 # API Variables
 
-
 load_dotenv()
+AuthorizationENV = os.getenv('AUTHORIZATION')
+
 limiter = Limiter(key_func=get_remote_address)
 
 app = server.manager
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-
-AuthorizationENV = os.getenv('AUTHORIZATION')
-length = password.length
-
 lower = string.ascii_lowercase
 upper = string.ascii_uppercase
 digits = string.digits
 punctuation = string.punctuation
 
-limiter = Limiter(key_func=get_remote_address)
-
-
 # All routes using the post method in the body
-
 
 @app.post("/")
 @limiter.limit("50/minute")
-
-async def root(request: Request, res: Response, passwd: Password, ):
+async def root(request: Request, res: Response, passwd: Password):
     Authorization = request.headers.get('Authorization')
-
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if Authorization == AuthorizationENV:
         length = passwd.length
 
-        if length >= 95:
+        if length >= 100:
             return JSONResponse(
                 status_code=431,
                 content={
@@ -73,7 +58,6 @@ async def root(request: Request, res: Response, passwd: Password, ):
             )
         
         carac = lower + upper + digits + punctuation
-
         password = "".join(random.sample(carac, length))
 
         return JSONResponse(
@@ -94,10 +78,9 @@ async def root(request: Request, res: Response, passwd: Password, ):
             content={
                     "detail": [
                         {
-                            "msg": "You don't have permission to acess this page",
+                            "msg": "You don't have permission to access this page",
                             "timestamp": now
                         }
                     ],
                 }
             )
-        
